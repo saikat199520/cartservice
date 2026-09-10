@@ -2,10 +2,18 @@ name: Build Push Image Trigger CI
 
 on:
   push:
-    branches: ["dev"]
+    branches:
+      - dev
+      - deploy
+  #workflow_dispatch:
 
 jobs:
+  sonar_check:
+    uses: ./.github/workflows/sonar.yaml
+    secrets: inherit
+
   build-push:
+    needs: [sonar_check]
     runs-on: ubuntu-24.04-arm
     environment: dev  
 
@@ -24,7 +32,6 @@ jobs:
       
       - name: docker build
         run: |
-          cd src
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }} .
           docker push  ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }}
 
